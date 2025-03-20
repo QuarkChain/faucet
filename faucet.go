@@ -48,9 +48,9 @@ const (
 )
 
 var (
-	ethRpcFlag = flag.String("ethrpc", "", "Ethereum mainnet rpc URL for ethclient to get address balance")
-	sepWsFlag  = flag.String("sepwsrpc", "", "Ethereum Sepolia websocket URL for ethclient to get swap transaction")
-	wsRpcFlag  = flag.String("wsrpc", "", "SWC websocket URL for ethclient to submit faucet or swap transactions")
+	ethMainRpcFlag = flag.String("ethmainrpc", "", "Ethereum mainnet rpc URL for ethclient to get address balance")
+	ethSepWsFlag   = flag.String("ethsepws", "", "Ethereum Sepolia websocket URL for ethclient to get swap transaction")
+	swcWsFlag      = flag.String("swcws", "", "SWC websocket URL for ethclient to submit faucet or swap transactions")
 
 	apiPortFlag = flag.Int("apiport", 81, "Listener port for the HTTP API connection")
 	dataPath    = flag.String("datadir", "./es-data", "Data directory for the databases")
@@ -98,7 +98,7 @@ func main() {
 
 	db, err := leveldb.New(*dataPath, 2048, 8196, "es-data/db/faucet/", false)
 
-	faucet, err := newFaucet(*wsRpcFlag, *ethRpcFlag, *sepWsFlag, ks, rawdb.NewDatabase(db))
+	faucet, err := newFaucet(*swcWsFlag, *ethMainRpcFlag, *ethSepWsFlag, ks, rawdb.NewDatabase(db))
 	if err != nil {
 		log.Crit("Failed to start faucet", "err", err)
 	}
