@@ -238,6 +238,7 @@
         };
 
         var reconnect = function() {
+            // TODO: it would be better to remove long connection (WebSocket) and use http request instead.
              server = new WebSocket("ws://65.109.90.160:81/api");
             // server = new WebSocket("wss://faucet.beta.testnet.l2.quarkchain.io:81/api");
 

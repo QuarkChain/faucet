@@ -49,7 +49,7 @@ const (
 
 var (
 	ethRpcFlag = flag.String("ethrpc", "", "Ethereum mainnet rpc URL for ethclient to get address balance")
-	sepRpcFlag = flag.String("sepwsrpc", "", "Ethereum Sepolia websocket URL for ethclient to get swap transaction")
+	sepWsFlag  = flag.String("sepwsrpc", "", "Ethereum Sepolia websocket URL for ethclient to get swap transaction")
 	wsRpcFlag  = flag.String("wsrpc", "", "SWC websocket URL for ethclient to submit faucet or swap transactions")
 
 	apiPortFlag = flag.Int("apiport", 81, "Listener port for the HTTP API connection")
@@ -82,7 +82,6 @@ func main() {
 	pass := strings.TrimSuffix(string(blob), "\n")
 
 	path := filepath.Join(os.Getenv("HOME"), ".faucet", "keys")
-	os.RemoveAll(path)
 	ks := keystore.NewKeyStore(path, keystore.StandardScryptN, keystore.StandardScryptP)
 	if blob, err = os.ReadFile(*accJSONFlag); err != nil {
 		log.Crit("Failed to read account key contents", "file", *accJSONFlag, "err", err)
@@ -99,7 +98,7 @@ func main() {
 
 	db, err := leveldb.New(*dataPath, 2048, 8196, "es-data/db/faucet/", false)
 
-	faucet, err := newFaucet(*wsRpcFlag, *ethRpcFlag, *sepRpcFlag, ks, rawdb.NewDatabase(db))
+	faucet, err := newFaucet(*wsRpcFlag, *ethRpcFlag, *sepWsFlag, ks, rawdb.NewDatabase(db))
 	if err != nil {
 		log.Crit("Failed to start faucet", "err", err)
 	}
@@ -183,7 +182,7 @@ func newFaucet(rpcFlag, ethRpcFlag, sepRpcFlag string, ks *keystore.KeyStore, db
 		keystore:  ks,
 		db:        db,
 		chainId:   chainId,
-		payout:    new(big.Int).Div(big.NewInt(int64(*payoutFlag)), big.NewInt(100)),
+		payout:    big.NewInt(int64(*payoutFlag)),
 		account:   ks.Accounts()[0],
 		timeouts:  make(map[string]time.Time),
 		update:    make(chan struct{}, 1),
@@ -296,6 +295,8 @@ func (f *faucet) apiHandler(w http.ResponseWriter, r *http.Request) {
 			source = "faucet"
 			resp, infos, err = f.faucet(common.HexToAddress(msg.Address))
 		} else {
+			// TODO: we can use a random number as wei add to the transaction value to match the sepolia and SWC txs
+			// so that no interface is needed between front-end and backend
 			source = "swap"
 			resp, infos, err = f.checkSwapTX(common.HexToHash(msg.Hash))
 		}
