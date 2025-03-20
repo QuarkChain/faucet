@@ -296,7 +296,7 @@ func (f *faucet) apiHandler(w http.ResponseWriter, r *http.Request) {
 			resp, infos, err = f.faucet(common.HexToAddress(msg.Address))
 		} else {
 			// TODO: we can use a random number as wei add to the transaction value to match the sepolia and SWC txs
-			// so that no interface is needed between front-end and backend
+			// so that no interface is needed between front-end and backend for swap
 			source = "swap"
 			resp, infos, err = f.checkSwapTX(common.HexToHash(msg.Hash))
 		}
