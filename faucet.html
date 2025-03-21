@@ -98,13 +98,13 @@
     </main>
 
     <script>
-        let web3;
-        let userAccount;
-
+        var userAccount;
         var server;
         var requests = [];
         var target;
         var theme = 'light'
+
+        const targetChainId = '11155111';
 
         const connectWalletBtn = document.getElementById('connectWallet');
         const faucetForm = document.getElementById('faucetForm');
@@ -119,15 +119,73 @@
         ethAmount.value = 0.01
         qkcAmount.value = 100
 
+        async function switchToNetwork() {
+            if (window.ethereum) {
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: '0xaa36a7' }],
+                    });
+                    console.log('Switch to Sepolia testnet!');
+                } catch (error) {
+                    if (error.code === 4902) {
+                        console.log('Target network not added to MetaMask!');
+                    } else {
+                        console.error('Failed to switch network:', error);
+                    }
+                }
+            } else {
+                console.log('MetaMask needs to install!');
+            }
+        }
+
+        var handleEthEvents = function() {
+            window.ethereum.request({ method: 'net_version' })
+                .then(chainId => {
+                    if (chainId !== targetChainId) {
+                        alert('Please switch to Ethereum Sepolia testnet!');
+                        switchToNetwork();
+                    } else {
+                        connectWalletBtn.textContent = userAccount.substring(0, 6) + '...' + userAccount.substring(38);
+                        document.getElementById('walletAddress').value = userAccount;
+                        document.getElementById('swapButton').disabled = false;
+                        document.getElementById('claimButton').disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error("Fail to fetch Chain ID: ", error);
+                });
+        }
+
+        if (typeof window.ethereum !== 'undefined') {
+            window.ethereum.on('accountsChanged', async (accounts) => {
+                if (accounts.length > 0) {
+                    userAccount = accounts[0];
+                    handleEthEvents();
+                } else {
+                    userAccount = '';
+                    connectWalletBtn.textContent = 'Connect Wallet';
+                    document.getElementById('walletAddress').value = '';
+                }
+            });
+
+            window.ethereum.on('chainChanged', async () => {
+                handleEthEvents();
+            });
+
+            window.ethereum.on('connect', async () => {
+                handleEthEvents();
+            });
+        }
+
         connectWalletBtn.addEventListener('click', async () => {
             try {
                 if (typeof window.ethereum !== 'undefined') {
                     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                     userAccount = accounts[0];
-                    connectWalletBtn.textContent = userAccount.substring(0, 6) + '...' + userAccount.substring(38);
-                    document.getElementById('walletAddress').value = userAccount;
-                    document.getElementById('swapButton').disabled = false;
-                    document.getElementById('claimButton').disabled = false;
+                    handleEthEvents();
+                } else {
+                    console.log('MetaMask needs to install!');
                 }
             } catch (error) {
                 console.error(error);
