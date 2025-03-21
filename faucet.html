@@ -98,7 +98,7 @@
     </main>
 
     <script>
-        var userAccount;
+        var userAccount = '';
         var server;
         var requests = [];
         var target;
@@ -122,12 +122,15 @@
 
         async function switchToNetwork() {
             if (window.ethereum) {
+                if (userAccount === '') {
+                    return;
+                }
                 try {
                     await window.ethereum.request({
                         method: 'wallet_switchEthereumChain',
                         params: [{ chainId: '0xaa36a7' }],
                     });
-                    console.log('Switch to Sepolia testnet!');
+                    alert('Switched to Ethereum Sepolia testnet!');
                 } catch (error) {
                     if (error.code === 4902) {
                         console.log('Target network not added to MetaMask!');
@@ -145,7 +148,6 @@
                 .then(chainId => {
                     curChainId = chainId;
                     if (chainId !== targetChainId) {
-                        alert('Please switch to Ethereum Sepolia testnet!');
                         switchToNetwork();
                     } else {
                         document.getElementById('walletAddress').value = userAccount;
@@ -246,13 +248,13 @@
         swapForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             swapStatus.classList.remove('hidden');
-            if (curChainId !== targetChainId) {
-                swapStatus.textContent = 'Please switch to Sepolia testnet!';
+            if (!userAccount) {
+                swapStatus.textContent = 'Please connect your wallet first!';
                 swapStatus.className = 'mt-4 text-center text-red-400';
                 return;
             }
-            if (!userAccount) {
-                swapStatus.textContent = 'Please connect your wallet first!';
+            if (curChainId !== targetChainId) {
+                swapStatus.textContent = 'Please switch to Sepolia testnet!';
                 swapStatus.className = 'mt-4 text-center text-red-400';
                 return;
             }
