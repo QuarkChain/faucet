@@ -103,6 +103,7 @@
         var requests = [];
         var target;
         var theme = 'light'
+        var curChainId
 
         const targetChainId = '11155111';
 
@@ -142,12 +143,13 @@
         var handleEthEvents = function() {
             window.ethereum.request({ method: 'net_version' })
                 .then(chainId => {
+                    curChainId = chainId;
                     if (chainId !== targetChainId) {
                         alert('Please switch to Ethereum Sepolia testnet!');
                         switchToNetwork();
                     } else {
-                        connectWalletBtn.textContent = userAccount.substring(0, 6) + '...' + userAccount.substring(38);
                         document.getElementById('walletAddress').value = userAccount;
+                        connectWalletBtn.textContent = userAccount.substring(0, 6) + '...' + userAccount.substring(38);
                         document.getElementById('swapButton').disabled = false;
                         document.getElementById('claimButton').disabled = false;
                     }
@@ -244,8 +246,13 @@
         swapForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             swapStatus.classList.remove('hidden');
+            if (curChainId !== targetChainId) {
+                swapStatus.textContent = 'Please switch to Sepolia testnet!';
+                swapStatus.className = 'mt-4 text-center text-red-400';
+                return;
+            }
             if (!userAccount) {
-                swapStatus.textContent = 'Please connect your wallet first!.';
+                swapStatus.textContent = 'Please connect your wallet first!';
                 swapStatus.className = 'mt-4 text-center text-red-400';
                 return;
             }
